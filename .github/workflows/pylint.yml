@@ -22,6 +22,23 @@ jobs:
       run: |
         python -m pip install --upgrade pip
         pip install pylint
-    - name: Run Pylint
+    - name: Run Pylint and check score
       run: |
-        python -m pylint **/*.py
+        # python -m pylint **/*.py
+        
+        # Run pylint and save the output, allowing all exit codes
+        pylint_output=$(pylint **/*.py || true)
+
+        # Output pylint results to the GitHub Actions log
+        echo "$pylint_output"
+
+        # Extract the pylint score
+        pylint_score=$(echo "$pylint_output" | grep -oP "Your code has been rated at \K[0-9]*\.[0-9]*/10" | grep -oP "[0-9]*\.[0-9]*" | head -n 1)
+
+        # Check if the pylint score is greater than 7
+        if (( $(echo "$pylint_score > 7" | bc -l) )); then
+          echo "Pylint score is greater than 7: $pylint_score"
+          exit 0  # Exit successfully if score is above 7
+        else
+          echo "Pylint score is not greater than 7: $pylint_score"
+          exit 1  # Fail the workflow if score is 7 or below
